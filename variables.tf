@@ -11,9 +11,9 @@ variable "build_stage" {
   default     = null
   description = "Dockerfile directives for build stage of multi-stage build."
   type = object({
-    name     = string
+    name     = optional(string)
     registry = optional(string, "public.ecr.aws")
-    path     = string
+    path     = optional(string)
     tag      = optional(string, "latest")
   })
 }
