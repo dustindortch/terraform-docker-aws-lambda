@@ -10,7 +10,7 @@ terraform {
 
 locals {
   from       = format("%s/%s:%s", var.base_image.registry, var.base_image.name, var.base_image.tag)
-  build_from = var.build_stage != null ? format("%s/%s:%s", var.build_stage.registry, var.build_stage.name, var.build_stage.tag) : null
+  build_from = try(format("%s/%s:%s", var.build_stage.registry, var.build_stage.name, var.build_stage.tag), null)
   build_path = var.build_stage != null ? var.build_stage.path : null
 
   template_map = {
