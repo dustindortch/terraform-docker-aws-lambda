@@ -23,8 +23,8 @@ locals {
 }
 
 resource "local_file" "Dockerfile" {
-  content  = templatefile("${path.cwd}/Dockerfile.tftpl", local.template_map)
-  filename = "${path.cwd}/Dockerfile"
+  content  = templatefile("${path.cwd}/${var.build.dockerfile}.tftpl", local.template_map)
+  filename = "${path.cwd}/${var.build.dockerfile}"
 }
 
 locals {
