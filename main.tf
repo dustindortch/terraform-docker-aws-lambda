@@ -1,25 +1,62 @@
-locals {
-  original_map = {
-    key1 = {
-      attr1 = "value1"
-      attr2 = "value2"
-    }
-    key2 = {
-      attr1 = "value3"
-      attr2 = "value4"
+terraform {
+  required_version = "~> 1.8"
+  required_providers {
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 3.0"
     }
   }
-  update_map = {
-    for k, v in local.original_map : k => merge(
-      v,
-      {
-        attr3 = "value5"
-      }
-    ) if v.attr1 == "value1"
-  }
-  combined_map = merge(local.original_map, local.update_map)
 }
 
-output "output_map" {
-  value = local.combined_map
+locals {
+  from       = format("%s/%s:%s", var.base_image.registry, var.base_image.name, var.base_image.tag)
+  build_from = var.build_stage != null ? format("%s/%s:%s", var.build_stage.registry, var.build_stage.name, var.build_stage.tag) : null
+  build_path = var.build_stage != null ? var.build_stage.path : null
+
+  template_map = {
+    build_from = local.build_from
+    build_path = local.build_path
+    from       = local.from
+    path       = var.path
+    handler    = var.handler
+  }
+}
+
+resource "local_file" "Dockerfile" {
+  content  = templatefile("${path.cwd}/Dockerfile.tftpl", local.template_map)
+  filename = "${path.cwd}/Dockerfile"
+}
+
+locals {
+  build_args = {
+    from    = local.from
+    handler = var.handler
+    path    = var.path
+  }
+
+  build = {
+    args       = merge(local.build_args, var.build.args)
+    context    = var.build.context
+    dockerfile = local_file.Dockerfile.filename
+  }
+}
+
+resource "docker_image" "lambda" {
+  name = var.name
+
+  build {
+    build_args = local.build.args
+    tag        = [for i in setproduct([var.name], var.tags) : join(":", i)]
+    context    = local.build.context
+    platform   = var.platform
+  }
+
+  force_remove = var.force_remove
+  keep_locally = var.keep_locally
+  platform     = var.platform
+}
+
+resource "docker_registry_image" "lambda" {
+  name          = docker_image.lambda.name
+  keep_remotely = true
 }

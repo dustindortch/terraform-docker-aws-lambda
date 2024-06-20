@@ -1,0 +1,10 @@
+FROM ${build_from} AS build
+WORKDIR /app
+COPY ${build_path}*.csproj ./
+RUN dotnet restore
+COPY ${build_path}* ./
+RUN dotnet build -o output
+
+FROM ${from}
+COPY --from=build /app/output $${LAMBDA_TASK_ROOT}
+CMD [ "${handler}" ]

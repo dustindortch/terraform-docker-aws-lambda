@@ -1,0 +1,18 @@
+FROM ${from}
+
+COPY ${path} $${LAMBDA_TASK_ROOT}
+
+CMD [ "${handler}" ]
+
+# ARG from
+
+# FROM $from
+
+# ARG handler
+# ARG path
+
+# ENV handler=$handler
+
+# COPY ${path} $${LAMBDA_TASK_ROOT}
+
+# CMD [ "${handler}" ]
